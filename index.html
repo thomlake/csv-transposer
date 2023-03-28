@@ -40,7 +40,7 @@
 
       button {
         margin-top: 5%;
-        margin-bottom: 10%;
+        margin-bottom: 1%;
         background-color: #ffffff00;
         border: 3px solid #353640;
         color: #353640;
@@ -74,7 +74,15 @@
     <div>
       <h1>CSV TRANSPOSER</h1>
       <center>
-        <button type="button" onclick="run()">SELECT CSV FILE</button>
+        <button type="button" onclick="run()">SELECT INPUT FILE</button>
+        <br>
+        <legend>Select separator:</legend>
+        <input type="radio" id="comma" name="separator" value="comma" checked>
+        <label for="huey">Comma</label>
+        <input type="radio" id="tab" name="separator" value="tab">
+        <label for="dewey">Tab</label>
+        <br>
+        <br>
       </center>
     </div>
     <p id="footer">Created with 🖤 by Thom</p>
@@ -82,10 +90,12 @@
 </html>
 <script type="text/javascript">
   function run() {
+    const separator = getSeperator();
+    const accept = separator == "tab" ? ".tsv" : ".csv";
     const input = document.createElement('input');
     input.title = 'Select File';
     input.type = 'file';
-    input.accept = '.csv';
+    input.accept = accept;
     input.onchange = _ => Array.from(input.files).forEach(transpose);
     input.click();
   }
@@ -94,8 +104,8 @@
     return name.split(".").slice(0, -1).join(".");
   }
 
-  function splitCSV(s) {
-    return s.split(",").map(e => e.trim())
+  function splitString(s, separator) {
+    return s.split(separator).map(e => e.trim())
   }
 
   function createCell(x, bold = false) {
@@ -132,14 +142,24 @@
     });
   }
 
+  function getSeperator() {
+    const separatorSelector = document.querySelector('input[name="separator"]:checked');
+    if (separatorSelector)
+      return separatorSelector.value;
+    return "comma";
+  }
+
   function transpose(file) {
     const outputName = (file.name.includes(".") ? stripExtension(file.name) : file.name) + ".docx";
     console.log("Transpose: ", file.name, "=>", outputName);
 
+    const separator = getSeperator();
+    const separatorChar = separator == "tab" ? "\t" : ",";
+
     const reader = new FileReader();
     reader.onload = event => {
         const content = event.target.result;
-        const lines = content.split(/\r\n|\n/).map(splitCSV);
+        const lines = content.split(/\r\n|\n/).map(s => splitString(s, separatorChar));
         const header = lines[0];
         const tables = lines.slice(1).map(line => createTable(header, line));
         
